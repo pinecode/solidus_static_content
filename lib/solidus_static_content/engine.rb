@@ -8,28 +8,19 @@ module SolidusStaticContent
     include SolidusSupport::EngineExtensions
 
     isolate_namespace ::Spree
-
     engine_name 'solidus_static_content'
 
-    # use rspec for tests
-    config.generators do |g|
-      g.test_framework :rspec
+    config.generators.test_framework :rspec
+
+    config.to_prepare do
+      Spree::Backend::Config.configure do |config|
+        config.menu_items << Spree::BackendConfiguration::MenuItem.new(
+          label: :pages,
+          icon: 'file-text',
+          url: :admin_pages_path,
+          condition: -> { can?(:admin, Spree::Page) }
+        )
+      end
     end
-
-    def self.menu_item
-      @menu_item ||= Spree::Backend::Config.class::MenuItem.new(
-        [:pages],
-        'file-text',
-        condition: -> { can?(:admin, Spree::Page) },
-      )
-    end
-
-    def self.activate_menu_items
-      return if Spree::Backend::Config.menu_items.include?(menu_item)
-
-      Spree::Backend::Config.menu_items << menu_item
-    end
-
-    config.to_prepare(&method(:activate_menu_items))
   end
 end
